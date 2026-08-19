@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.cardmanage.app",
+  "productName": "Card Manager",
+  "directories": {
+    "output": "release/${version}"
+  },
+  "files": [
+    "dist",
+    "dist-electron"
+  ],
+  "asarUnpack": [
+    "**/*.node",
+    "**/node_modules/serialport/**",
+    "**/node_modules/@serialport/**",
+    "**/node_modules/nfc-pcsc/**",
+    "**/node_modules/@pokusew/**",
+    "**/node_modules/bindings/**",
+    "**/node_modules/file-uri-to-path/**",
+    "**/node_modules/node-gyp-build/**"
+  ],
+  "mac": {
+    "target": "dmg",
+    "category": "public.app-category.medical"
+  },
+  "win": {
+    "target": "nsis"
+  },
+  "linux": {
+    "target": "AppImage"
+  }
+}
