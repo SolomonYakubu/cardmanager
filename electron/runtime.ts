@@ -97,7 +97,7 @@ export async function createRuntime(appDataPath: string): Promise<Runtime> {
 
   // Resolve real hardware where present, simulated where not. Adapters are
   // already connected by the resolver.
-  const hardware = await resolveHardware()
+  const hardware = await resolveHardware(settings)
 
   const app = createCardApp({
     patients,

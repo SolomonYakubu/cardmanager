@@ -133,13 +133,16 @@ async function resolveNfc(mode: HwMode): Promise<ResolvedDevice<NfcAdapter>> {
   return { adapter: real, mode: 'real', kind: 'PC/SC reader', detail: status.detail }
 }
 
-async function resolvePrinter(mode: HwMode): Promise<ResolvedDevice<PrinterAdapter>> {
+async function resolvePrinter(mode: HwMode, settings?: import('../../core/adapters/sqlite/settings-repository').SqliteSettingsRepository): Promise<ResolvedDevice<PrinterAdapter>> {
   if (mode === 'fake') {
     const fake = new FakePrinterAdapter()
     await fake.connect()
     return { adapter: fake, mode: 'simulated', kind: 'Simulated printer' }
   }
-  const cfg = process.env.CARD_PRINTER?.trim() ?? 'pdf'
+  
+  let cfg = settings ? await settings.get('printer_mode') : undefined
+  if (!cfg) cfg = process.env.CARD_PRINTER?.trim() ?? 'pdf'
+  
   if (cfg === 'physical' || cfg.startsWith('physical:')) {
     const deviceName = cfg.startsWith('physical:') ? cfg.slice('physical:'.length) : undefined
     const adapter = new SystemPrinterAdapter(new ElectronPhysicalSink(deviceName || undefined))
@@ -190,12 +193,12 @@ async function resolveBarcode(mode: HwMode): Promise<{
   return simulated(cfg === 'keyboard' ? 'keyboard-wedge (handled in UI)' : undefined)
 }
 
-export async function resolveHardware(): Promise<ResolvedHardware> {
+export async function resolveHardware(settings?: import('../../core/adapters/sqlite/settings-repository').SqliteSettingsRepository): Promise<ResolvedHardware> {
   const mode = (process.env.CARD_HW?.trim() as HwMode) || 'auto'
 
   const [nfc, printer, barcode] = await Promise.all([
     resolveNfc(mode),
-    resolvePrinter(mode),
+    resolvePrinter(mode, settings),
     resolveBarcode(mode),
   ])
 

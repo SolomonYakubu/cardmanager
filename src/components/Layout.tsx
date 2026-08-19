@@ -20,9 +20,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col items-center gap-6">
           <Link
             to="/"
-            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#25272d] text-white font-black text-xl hover:scale-105 transition shadow-inner"
+            className="flex h-14 w-14 items-center justify-center hover:scale-105 transition"
           >
-            H
+            <img src={logoImg} alt="UATH Logo" className="h-full w-full object-contain drop-shadow-md" />
           </Link>
 
           {/* Navigation Pill Cluster */}
@@ -71,7 +71,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <header className="flex h-20 items-center justify-between px-8 bg-[#16171a] border-b border-[#202227]/60 shrink-0">
           
           <div className="flex items-center gap-4">
-            <img src={logoImg} alt="UATH Logo" className="h-10 w-auto object-contain" />
             <div className="flex flex-col">
               <h1 className="text-sm font-black tracking-tight text-white uppercase">
                 University of Abuja Teaching Hospital

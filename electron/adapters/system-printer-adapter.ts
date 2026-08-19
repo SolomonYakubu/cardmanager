@@ -41,10 +41,14 @@ function detail(err: unknown): string {
 }
 
 export class SystemPrinterAdapter implements PrinterAdapter {
-  readonly #sink: PrintSink
+  #sink: PrintSink
   #connected = false
 
   constructor(sink: PrintSink) {
+    this.#sink = sink
+  }
+
+  setSink(sink: PrintSink) {
     this.#sink = sink
   }
 

@@ -132,7 +132,21 @@ export function registerCardHandlers({ app, sim, hardware, settings, designs }: 
 
   ipcMain.handle(CHANNELS.getSetting, (_e, key: string) => settings.get(key))
 
-  ipcMain.handle(CHANNELS.updateSetting, (_e, key: string, value: string) => settings.set(key, value))
+  ipcMain.handle(CHANNELS.updateSetting, async (_e, key: string, value: string) => {
+    await settings.set(key, value)
+    if (key === 'printer_mode' && hardware.printer.mode === 'real') {
+      const adapter = hardware.printer.adapter as any
+      if (typeof adapter.setSink === 'function') {
+        const { ElectronPdfSink, ElectronPhysicalSink } = await import('../adapters/electron-print-sink')
+        if (value === 'physical' || value.startsWith('physical:')) {
+          const deviceName = value.startsWith('physical:') ? value.slice('physical:'.length) : undefined
+          adapter.setSink(new ElectronPhysicalSink(deviceName))
+        } else {
+          adapter.setSink(new ElectronPdfSink())
+        }
+      }
+    }
+  })
 
   ipcMain.handle(CHANNELS.bulkRegisterPatients, async (_e, patients: RegisterPatientInput[]) => {
     // In a real app we'd want a bulk insert transaction, but we can just map over register for now
