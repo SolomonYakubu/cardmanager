@@ -13,6 +13,26 @@ process.env.APP_ROOT = path.join(__dirname, '..')
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
+// ── TEMP DIAGNOSTICS (remove after) ──────────────────────────────────
+const fsd = require('node:fs')
+const osd = require('node:os')
+const DIAG_PATH = path.join(osd.homedir(), 'cardmanage-diag.log')
+const diag = (m: string) => {
+  const line = `${new Date().toISOString()} ${m}\n`
+  try {
+    process.stderr.write(`[DIAG] ${line}`)
+  } catch {
+    /* ignore */
+  }
+  try {
+    fsd.appendFileSync(DIAG_PATH, line)
+  } catch {
+    /* ignore */
+  }
+}
+diag(`=== main.js loaded; DEV_URL=${VITE_DEV_SERVER_URL ?? '(none)'}`)
+// ── END TEMP DIAGNOSTICS ─────────────────────────────────────────────
+
 process.on('uncaughtException', (error) => {
   console.error(error)
   const { dialog } = require('electron')
@@ -45,11 +65,25 @@ function createWindow() {
       // Node/hardware access — everything crosses the preload bridge.
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: false,
     },
   })
 
+  // ── TEMP DIAGNOSTICS (remove after) ──────────────────────────────────
+  diag(`createWindow start; RENDERER_DIST=${RENDERER_DIST}`)
+  const wc = win.webContents
+  wc.on('did-fail-load', (...a: unknown[]) => diag(`did-fail-load ${JSON.stringify(a.slice(1))}`))
+  wc.on('did-finish-load', () => diag('did-finish-load'))
+  wc.on('dom-ready', () => diag('dom-ready'))
+  wc.on('render-process-gone', (...a: unknown[]) => diag(`render-process-gone ${JSON.stringify(a.slice(1))}`))
+  wc.on('preload-error', (...a: unknown[]) => diag(`preload-error ${JSON.stringify(a.slice(1))}`))
+  wc.on('console-message', (...a: unknown[]) =>
+    diag(`console ${a.map((x) => (typeof x === 'object' ? JSON.stringify(x) : String(x))).join(' | ')}`),
+  )
+  // ── END TEMP DIAGNOSTICS ─────────────────────────────────────────────
+
   win.once('ready-to-show', () => {
+    diag('ready-to-show')
     win?.maximize()
     win?.show()
   })
@@ -57,7 +91,9 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    win.loadFile(path.join(RENDERER_DIST, 'index.html'))
+    const indexHtml = path.join(RENDERER_DIST, 'index.html')
+    diag(`loadFile ${indexHtml} exists=${fsd.existsSync(indexHtml)}`)
+    win.loadFile(indexHtml)
   }
 }
 
@@ -74,8 +110,17 @@ ipcMain.handle('app:getVersions', () => ({
 ipcMain.handle('app:ping', () => 'pong')
 
 app.whenReady().then(async () => {
-  const runtime = await createRuntime(app.getPath('userData'))
+  diag('whenReady: start')
+  let runtime
+  try {
+    runtime = await createRuntime(app.getPath('userData'))
+    diag('whenReady: createRuntime done')
+  } catch (err) {
+    diag(`whenReady: createRuntime THREW ${err instanceof Error ? err.stack : String(err)}`)
+    throw err
+  }
   registerCardHandlers(runtime)
+  diag('whenReady: handlers registered, creating window')
   createWindow()
 
   // Startup diagnostics: which device each port resolved to (real vs simulated).
