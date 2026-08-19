@@ -187,4 +187,59 @@ export function registerCardHandlers({ app, sim, hardware, settings, designs }: 
 
   // Global Card History
   ipcMain.handle(CHANNELS.listAllCards, () => app.cards.listAll())
+
+  ipcMain.handle(
+    CHANNELS.downloadPdf,
+    async (
+      _e,
+      cardRecordId: string,
+      options?: { frontBackground?: string | null; backBackground?: string | null }
+    ) => {
+      const card = await app.cards.findById(CardRecordId(cardRecordId))
+      if (!card) throw new Error('Card not found')
+      const patient = await app.patients.get(card.patientId)
+      if (!patient) throw new Error('Patient not found')
+
+      const { dialog } = require('electron')
+      const { filePath } = await dialog.showSaveDialog({
+        title: 'Save Card PDF',
+        defaultPath: `${patient.name.replace(/[^a-z0-9]/gi, '_')}_Card.pdf`,
+        filters: [{ name: 'PDF Document', extensions: ['pdf'] }],
+      })
+
+      if (!filePath) return null
+
+      // Build the artwork
+      const defaultDesign = await designs.getDefault()
+      const frontBackground = options?.frontBackground ?? defaultDesign?.frontBackground ?? undefined
+      const backBackground = options?.backBackground ?? defaultDesign?.backBackground ?? undefined
+
+      const artwork = {
+        patientName: patient.name,
+        hospitalNo: patient.hospitalNo,
+        walletNo: patient.walletNo ?? undefined,
+        emrLink: `https://emr.hospital.local/patient/${patient.emrReference}`,
+        barcodeValue: card.originalityCode,
+        frontBackground,
+        backBackground,
+        issuedAt: card.issuedAt ?? undefined,
+      }
+
+      const { renderCardHtml } = require('../adapters/artwork')
+      const html = await renderCardHtml(artwork)
+
+      const path = require('node:path')
+      const { ElectronPdfSink } = require('../adapters/electron-print-sink')
+      const tempDir = path.dirname(filePath)
+      
+      const sink = new ElectronPdfSink(tempDir)
+      const outPath = await sink.emit(html, { cardRecordId: 'temp_download' })
+
+      const fs = require('node:fs/promises')
+      if (outPath !== filePath) {
+        await fs.rename(outPath, filePath)
+      }
+      return filePath
+    }
+  )
 }

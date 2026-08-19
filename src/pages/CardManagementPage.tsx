@@ -2,7 +2,7 @@ import { HardwareBar } from '../components/HardwareBar'
 import { OutcomeBanner } from '../components/OutcomeBanner'
 import { PatientPanel } from '../components/PatientPanel'
 import { CardRow } from '../components/CardRow'
-import { CardIcon, PlusIcon, NfcIcon } from '../components/icons'
+import { CardIcon, PlusIcon, NfcIcon, DownloadIcon } from '../components/icons'
 import { useOperatorConsole } from '../hooks/useOperatorConsole'
 import { CardPreview } from '../components/CardPreview'
 
@@ -79,23 +79,34 @@ export function CardManagementPage() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => actions.issue()}
-                  disabled={state.busy}
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-[#d8ff3e] px-7 py-3 text-xs font-black uppercase tracking-wider text-black shadow-lg shadow-[#d8ff3e]/20 transition hover:bg-[#c9f02e] active:scale-95 disabled:pointer-events-none disabled:opacity-80"
-                >
-                  {state.busyMessage ? (
-                    <>
-                      <NfcIcon className="text-base font-bold animate-pulse" />
-                      <span>{state.busyMessage}</span>
-                    </>
-                  ) : (
-                    <>
-                      <PlusIcon className="text-base font-bold" />
-                      <span>Issue & Print Card</span>
-                    </>
+                <div className="flex items-center gap-2">
+                  {activeCard && (
+                    <button
+                      onClick={() => window.cardApi.downloadPdf(activeCard.id, { frontBackground: state.frontDesign, backBackground: state.backDesign })}
+                      title="Download PDF"
+                      className="inline-flex shrink-0 items-center justify-center rounded-full bg-[#2c2e35] h-10 w-10 text-white shadow-lg transition hover:bg-[#3f414a] active:scale-95"
+                    >
+                      <DownloadIcon className="text-base" />
+                    </button>
                   )}
-                </button>
+                  <button
+                    onClick={() => actions.issue()}
+                    disabled={state.busy}
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-[#d8ff3e] px-7 py-3 text-xs font-black uppercase tracking-wider text-black shadow-lg shadow-[#d8ff3e]/20 transition hover:bg-[#c9f02e] active:scale-95 disabled:pointer-events-none disabled:opacity-80"
+                  >
+                    {state.busyMessage ? (
+                      <>
+                        <NfcIcon className="text-base font-bold animate-pulse" />
+                        <span>{state.busyMessage}</span>
+                      </>
+                    ) : (
+                      <>
+                        <PlusIcon className="text-base font-bold" />
+                        <span>Issue & Print Card</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* 3D Interactive Card Stage */}

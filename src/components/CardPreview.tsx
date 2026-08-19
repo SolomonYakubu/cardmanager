@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Patient, Card } from '../../core/domain/models';
 import { QRCode } from './QRCode';
 import { Barcode } from './Barcode';
-import { CardIcon } from './icons';
+import { CardIcon, SolidCalendarIcon, SolidUserIcon, SolidPhoneIcon, SolidPlusIcon } from './icons';
 
 interface CardPreviewProps {
   patient: Patient | null;
@@ -26,6 +26,9 @@ export function CardPreview({ patient, card, frontBackground, backBackground }: 
   const hospitalNo = patient.hospitalNo;
   const qrLink = `https://emr.hospital.local/patient/${patient.emrReference}`;
   const barcodeValue = card?.originalityCode ?? '0000000000000000';
+  const formattedDate = (card?.issuedAt ? new Date(card.issuedAt) : new Date())
+    .toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    .replace(/\//g, ' / ');
 
   return (
     <div className="flex flex-col items-center gap-5">
@@ -53,31 +56,41 @@ export function CardPreview({ patient, card, frontBackground, backBackground }: 
             
             <div className="flex flex-col h-full relative z-10">
               {/* Patient Details */}
-              <div className="absolute bottom-4 left-[115px] flex flex-col">
-                <span className={`text-[9px] font-bold tracking-widest mb-0.5 ${frontBackground ? 'text-[#009688] drop-shadow-sm' : 'text-[#009688]'}`}>
+              <div className="absolute bottom-3 left-[115px] right-3 flex flex-col">
+                <span className={`text-[8px] font-bold tracking-widest mb-0.5 ${frontBackground ? 'text-[#009688] drop-shadow-sm' : 'text-[#009688]'}`}>
                   PATIENT NAME
                 </span>
-                <h2 className={`text-lg font-bold tracking-tight leading-none mb-2 truncate max-w-[250px] ${frontBackground ? 'text-white drop-shadow-md' : 'text-white'}`}>
+                <h2 className={`text-base font-bold tracking-tight leading-none mb-1.5 truncate ${frontBackground ? 'text-white drop-shadow-md' : 'text-white'}`}>
                   {patient.name}
                 </h2>
                 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2.5">
                   <div className="flex flex-col">
-                    <span className={`text-[8px] font-bold tracking-widest mb-0.5 ${frontBackground ? 'text-[#009688] drop-shadow-sm' : 'text-[#009688]'}`}>
+                    <span className={`text-[7px] font-bold tracking-widest mb-0.5 ${frontBackground ? 'text-[#009688] drop-shadow-sm' : 'text-[#009688]'}`}>
                       HOSPITAL NO.
                     </span>
-                    <span className={`font-mono text-sm font-bold ${frontBackground ? 'text-white drop-shadow-sm' : 'text-slate-200'}`}>
+                    <span className={`font-mono text-xs font-bold ${frontBackground ? 'text-white drop-shadow-sm' : 'text-slate-200'}`}>
                       {hospitalNo}
                     </span>
                   </div>
                   
-                  <div className="h-7 w-px bg-[#009688]/60" />
+                  <div className="h-5 w-px bg-[#009688]/60" />
                   <div className="flex flex-col">
-                    <span className={`text-[8px] font-bold tracking-widest mb-0.5 ${frontBackground ? 'text-[#009688] drop-shadow-sm' : 'text-[#009688]'}`}>
+                    <span className={`text-[7px] font-bold tracking-widest mb-0.5 ${frontBackground ? 'text-[#009688] drop-shadow-sm' : 'text-[#009688]'}`}>
                       WALLET NO.
                     </span>
-                    <span className={`font-mono text-sm font-bold ${frontBackground ? 'text-white drop-shadow-sm' : 'text-slate-200'}`}>
+                    <span className={`font-mono text-xs font-bold ${frontBackground ? 'text-white drop-shadow-sm' : 'text-slate-200'}`}>
                       {patient.walletNo || 'AY 00000000 00'}
+                    </span>
+                  </div>
+
+                  <div className="h-5 w-px bg-[#009688]/60" />
+                  <div className="flex flex-col">
+                    <span className={`text-[7px] font-bold tracking-widest mb-0.5 ${frontBackground ? 'text-[#009688] drop-shadow-sm' : 'text-[#009688]'}`}>
+                      BANK
+                    </span>
+                    <span className={`font-mono text-xs font-bold ${frontBackground ? 'text-white drop-shadow-sm' : 'text-slate-200'}`}>
+                      Moniepoint
                     </span>
                   </div>
                 </div>
@@ -95,14 +108,55 @@ export function CardPreview({ patient, card, frontBackground, backBackground }: 
             }}
           >
             <div className="w-full h-full relative z-10">
-              {/* Left Side: QR Code */}
-              <div className="absolute left-7 top-[55%] -translate-y-1/2 flex flex-col items-center bg-white p-2 rounded-xl shadow-lg">
-                <QRCode value={qrLink} className="h-[76px] w-[76px] rounded-sm overflow-hidden" />
+              {/* Left Side: QR Code + Instructions */}
+              <div className="absolute left-2.5 top-[52%] -translate-y-1/2 flex items-center gap-1.5 max-w-[178px]">
+                {/* QR Code inside White Rounded Box */}
+                <div className="flex flex-col items-center justify-center bg-white p-[3px] rounded-lg border border-[#0f2b48]/30 shadow-md shrink-0">
+                  <QRCode value={qrLink} className="h-[52px] w-[52px] rounded-sm overflow-hidden" />
+                </div>
+
+                {/* Instructions list */}
+                <div className="flex flex-col gap-[4px] text-[#0f2b48] min-w-0 flex-1">
+                  {/* Issued Date */}
+                  <div className="flex items-center gap-1.5">
+                    <SolidCalendarIcon className="w-4 h-4 shrink-0 text-[#0f2b48]" />
+                    <span className="text-[8.5px] font-extrabold tracking-tight truncate">
+                      Issued: {formattedDate}
+                    </span>
+                  </div>
+
+                  {/* Instruction 1 */}
+                  <div className="flex items-center gap-1.5">
+                    <SolidUserIcon className="w-4 h-4 shrink-0 text-[#0f2b48]" />
+                    <span className="text-[6.5px] font-bold leading-[1.15]">
+                      Always present this card during registration and consultation.
+                    </span>
+                  </div>
+
+                  {/* Instruction 2 */}
+                  <div className="flex items-center gap-1.5">
+                    <SolidPhoneIcon className="w-4 h-4 shrink-0 text-[#0f2b48]" />
+                    <span className="text-[6.5px] font-bold leading-[1.15]">
+                      Report lost card immediately.
+                    </span>
+                  </div>
+
+                  {/* Instruction 3 */}
+                  <div className="flex items-center gap-1.5">
+                    <SolidPlusIcon className="w-4 h-4 shrink-0 text-[#0f2b48]" />
+                    <span className="text-[6.5px] font-bold leading-[1.15]">
+                      In case of emergency, bring this card to any UATH department.
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              {/* Bottom Right: Barcode */}
-              <div className="absolute bottom-2 right-4 flex justify-center shadow-lg max-w-[60%]">
-                <Barcode value={barcodeValue} className="h-6 w-auto max-w-full object-contain" />
+              {/* Bottom Right: Barcode in White Box */}
+              <div className="absolute bottom-[9px] right-[14px] flex flex-col items-center justify-center w-[165px]">
+                <div className="flex items-center justify-center h-[34px]">
+                  <Barcode value={barcodeValue} className="h-6 w-auto max-w-full object-contain" />
+                </div>
+                <span className="text-[5px] text-white/70 font-medium tracking-wide mt-[-1px]">Powered by Blueguava &amp; Xenolink</span>
               </div>
             </div>
           </div>

@@ -31,6 +31,7 @@ export interface CardArtwork {
   readonly frontBackground?: string
   readonly backBackground?: string
   readonly walletNo?: string
+  readonly issuedAt?: string
 }
 
 export interface PrintJob {

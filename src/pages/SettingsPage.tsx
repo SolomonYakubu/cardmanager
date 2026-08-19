@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { SettingsIcon, CheckCircleIcon } from '../components/icons'
+import { CheckCircleIcon } from '../components/icons'
 
 export function SettingsPage() {
   const [printerMode, setPrinterMode] = useState<'pdf' | 'physical'>('pdf')

@@ -17,14 +17,17 @@
     "**/node_modules/@pokusew/**",
     "**/node_modules/bindings/**",
     "**/node_modules/file-uri-to-path/**",
-    "**/node_modules/node-gyp-build/**"
+    "**/node_modules/node-gyp-build/**",
+    "**/node_modules/better-sqlite3/**"
   ],
   "mac": {
     "target": "dmg",
     "category": "public.app-category.medical"
   },
+  "icon": "build/icon.png",
   "win": {
-    "target": "nsis"
+    "target": "nsis",
+    "icon": "build/icon.png"
   },
   "linux": {
     "target": "AppImage"

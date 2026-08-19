@@ -3,7 +3,7 @@ import type { Design } from '../../core/domain/models'
 import { DesignUploadPanel } from '../components/DesignUploadPanel'
 import { QRCode } from '../components/QRCode'
 import { Barcode } from '../components/Barcode'
-import { CardIcon, CheckIcon, NfcIcon } from '../components/icons'
+import { CardIcon, CheckIcon, NfcIcon, SolidCalendarIcon, SolidUserIcon, SolidPhoneIcon, SolidPlusIcon } from '../components/icons'
 
 export function DesignManagementPage() {
   const [designs, setDesigns] = useState<Design[]>([])
@@ -177,15 +177,56 @@ export function DesignManagementPage() {
                     <p className="text-[10px] text-slate-500 mt-1">Upload a back background to preview barcodes</p>
                   </div>
                 ) : (
-                  <div className="w-full h-full relative z-10 p-4">
-                    {/* Left Side: QR Code Overlay */}
-                    <div className="absolute left-7 top-[55%] -translate-y-1/2 flex flex-col items-center">
-                      <QRCode value="https://emr.hospital.local/patient/HOSP-09412" className="h-[72px] w-[72px] rounded-sm overflow-hidden mix-blend-multiply" />
+                  <div className="w-full h-full relative z-10 p-3">
+                    {/* Left Side: QR Code + Instructions */}
+                    <div className="absolute left-2.5 top-[52%] -translate-y-1/2 flex items-center gap-1.5 max-w-[165px]">
+                      {/* QR Code inside White Rounded Box */}
+                      <div className="flex flex-col items-center justify-center bg-white p-[3px] rounded-lg border border-[#0f2b48]/30 shadow-md shrink-0">
+                        <QRCode value="https://emr.hospital.local/patient/HOSP-09412" className="h-[48px] w-[48px] rounded-sm overflow-hidden" />
+                      </div>
+
+                      {/* Instructions list */}
+                      <div className="flex flex-col gap-[3px] text-[#0f2b48] min-w-0 flex-1">
+                        {/* Issued Date */}
+                        <div className="flex items-center gap-1.5">
+                          <SolidCalendarIcon className="w-3.5 h-3.5 shrink-0 text-[#0f2b48]" />
+                          <span className="text-[7.5px] font-extrabold tracking-tight truncate">
+                            Issued: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, ' / ')}
+                          </span>
+                        </div>
+
+                        {/* Instruction 1 */}
+                        <div className="flex items-center gap-1.5">
+                          <SolidUserIcon className="w-3.5 h-3.5 shrink-0 text-[#0f2b48]" />
+                          <span className="text-[6px] font-bold leading-[1.15]">
+                            Always present this card during registration and consultation.
+                          </span>
+                        </div>
+
+                        {/* Instruction 2 */}
+                        <div className="flex items-center gap-1.5">
+                          <SolidPhoneIcon className="w-3.5 h-3.5 shrink-0 text-[#0f2b48]" />
+                          <span className="text-[6px] font-bold leading-[1.15]">
+                            Report lost card immediately.
+                          </span>
+                        </div>
+
+                        {/* Instruction 3 */}
+                        <div className="flex items-center gap-1.5">
+                          <SolidPlusIcon className="w-3.5 h-3.5 shrink-0 text-[#0f2b48]" />
+                          <span className="text-[6px] font-bold leading-[1.15]">
+                            In case of emergency, bring this card to any UATH department.
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Bottom Right: Barcode Overlay */}
-                    <div className="absolute bottom-4 right-5 flex justify-center bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 shadow-md">
-                      <Barcode value="8492019482910394" className="h-7 w-40" />
+                    <div className="absolute bottom-[8px] right-[14px] flex flex-col items-center justify-center w-[155px]">
+                      <div className="flex items-center justify-center h-[32px]">
+                        <Barcode value="8492019482910394" className="h-5 w-auto max-w-full object-contain" />
+                      </div>
+                      <span className="text-[4.5px] text-white/70 font-medium tracking-wide mt-[-1px]">Powered by Blueguava &amp; Xenolink</span>
                     </div>
                   </div>
                 )}

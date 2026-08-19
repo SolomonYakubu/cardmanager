@@ -62,6 +62,9 @@ export interface CardApi {
 
   // Global Card History
   listAllCards(): Promise<Card[]>
+
+  // Utilities
+  downloadPdf(cardRecordId: string, options?: { frontBackground?: string | null; backBackground?: string | null }): Promise<string | null>
 }
 
 /** Channel name per method. `Record<keyof CardApi, string>` keeps it exhaustive. */
@@ -87,4 +90,5 @@ export const CHANNELS: Record<keyof CardApi, string> = {
   setDefaultDesign: 'designs:setDefault',
   getDefaultDesign: 'designs:getDefault',
   listAllCards: 'cards:listAll',
+  downloadPdf: 'app:downloadPdf',
 }

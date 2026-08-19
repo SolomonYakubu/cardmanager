@@ -28,6 +28,7 @@ import { NfcUid } from '../core/domain/ids'
 import type { Card } from '../core/domain/models'
 import { resolveHardware, type ResolvedHardware } from './hardware/resolve'
 import path from 'node:path'
+import fs from 'node:fs'
 
 /**
  * Dev-only fallback key. In a real deployment the issuance key is provided by
@@ -86,6 +87,11 @@ export async function createRuntime(appDataPath: string): Promise<Runtime> {
   )
 
   const dbPath = path.join(appDataPath, 'cardmanage.sqlite')
+  
+  if (!fs.existsSync(appDataPath)) {
+    fs.mkdirSync(appDataPath, { recursive: true })
+  }
+  
   const db = new SQLiteDatabase(dbPath)
 
   const patients = new SqlitePatientRepository(db)

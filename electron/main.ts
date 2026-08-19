@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu } from 'electron'
 import path from 'node:path'
 import { createRuntime } from './runtime'
 import { registerCardHandlers } from './ipc/register'
@@ -13,9 +13,23 @@ process.env.APP_ROOT = path.join(__dirname, '..')
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
+process.on('uncaughtException', (error) => {
+  console.error(error)
+  const { dialog } = require('electron')
+  if (app.isReady()) {
+    dialog.showErrorBox('Application Crash', error.stack || error.message || String(error))
+  }
+})
+
 let win: BrowserWindow | null = null
 
 function createWindow() {
+  Menu.setApplicationMenu(null)
+
+  const iconPath = VITE_DEV_SERVER_URL
+    ? path.join(process.env.APP_ROOT || '', 'public', 'logo.png')
+    : path.join(RENDERER_DIST, 'logo.png')
+
   win = new BrowserWindow({
     width: 1180,
     height: 760,
@@ -23,6 +37,8 @@ function createWindow() {
     minHeight: 600,
     backgroundColor: '#f8fafc',
     show: false,
+    autoHideMenuBar: true,
+    icon: iconPath,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       // Security posture required by the spec: the renderer never gets direct
@@ -33,11 +49,13 @@ function createWindow() {
     },
   })
 
-  win.once('ready-to-show', () => win?.show())
+  win.once('ready-to-show', () => {
+    win?.maximize()
+    win?.show()
+  })
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
-    win.webContents.openDevTools({ mode: 'right' })
   } else {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }

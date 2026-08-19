@@ -39,6 +39,7 @@ const cardApi: CardApi = {
   setDefaultDesign: (id) => ipcRenderer.invoke(CHANNELS.setDefaultDesign, id),
   getDefaultDesign: () => ipcRenderer.invoke(CHANNELS.getDefaultDesign),
   listAllCards: () => ipcRenderer.invoke(CHANNELS.listAllCards),
+  downloadPdf: (cardRecordId, options) => ipcRenderer.invoke(CHANNELS.downloadPdf, cardRecordId, options),
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)
