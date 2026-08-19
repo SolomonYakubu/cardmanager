@@ -2,6 +2,7 @@ node_modules
 dist
 dist-electron
 release
+build/vc_redist.x64.exe
 
 *.log
 .DS_Store

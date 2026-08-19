@@ -3,7 +3,9 @@
     "allow": [
       "WebSearch",
       "WebFetch(domain:www.hidglobal.com)",
-      "WebFetch(domain:ccid.apdu.fr)"
+      "WebFetch(domain:ccid.apdu.fr)",
+      "Bash(MSYS_NO_PATHCONV=1 timeout 30 node_modules/.bin/electron --version)",
+      "Bash(echo \"exit=$?\")"
     ]
   }
 }

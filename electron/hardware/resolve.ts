@@ -67,6 +67,22 @@ type HwMode = 'auto' | 'fake' | 'real'
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
 
 async function loadNfcLib(): Promise<NfcLib | null> {
+  // The pcsclite native addon calls SCardEstablishContext synchronously,
+  // which BLOCKS the event loop indefinitely if the Windows Smart Card
+  // service (SCardSvr) is not running. Check the service first.
+  if (process.platform === 'win32') {
+    try {
+      const { execSync } = require('child_process')
+      const output = execSync('sc query SCardSvr', { encoding: 'utf-8', timeout: 3000 })
+      if (!output.includes('RUNNING')) {
+        console.log('[cardmanage] Smart Card service not running — skipping NFC')
+        return null
+      }
+    } catch {
+      console.log('[cardmanage] Could not query Smart Card service — skipping NFC')
+      return null
+    }
+  }
   try {
     const mod = await import('nfc-pcsc')
     return mod.NFC as unknown as NfcLib

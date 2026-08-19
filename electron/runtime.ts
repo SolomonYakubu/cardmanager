@@ -80,6 +80,17 @@ export class DemoStation {
 }
 
 export async function createRuntime(appDataPath: string): Promise<Runtime> {
+  // Reuse the diag logger from main.ts
+  const osd = require('node:os')
+  const fsd = require('node:fs')
+  const DIAG_PATH = path.join(osd.homedir(), 'cardmanage-diag.log')
+  const diag = (m: string) => {
+    const line = `${new Date().toISOString()} [runtime] ${m}\n`
+    try { process.stderr.write(`[DIAG] ${line}`) } catch { /* ignore */ }
+    try { fsd.appendFileSync(DIAG_PATH, line) } catch { /* ignore */ }
+  }
+
+  diag('createRuntime: start')
   const clock = new SystemClock()
   const ids = new UuidIdGenerator()
   const originality = new HmacOriginalitySigner(
@@ -92,7 +103,9 @@ export async function createRuntime(appDataPath: string): Promise<Runtime> {
     fs.mkdirSync(appDataPath, { recursive: true })
   }
   
+  diag(`createRuntime: opening SQLite at ${dbPath}`)
   const db = new SQLiteDatabase(dbPath)
+  diag('createRuntime: SQLite OK')
 
   const patients = new SqlitePatientRepository(db)
   const cards = new SqliteCardRepository(db)
@@ -103,7 +116,34 @@ export async function createRuntime(appDataPath: string): Promise<Runtime> {
 
   // Resolve real hardware where present, simulated where not. Adapters are
   // already connected by the resolver.
-  const hardware = await resolveHardware(settings)
+  // Wrap in a timeout: if hardware detection hangs (e.g. PC/SC service not
+  // running), fall back to all-simulated after 10 seconds.
+  diag('createRuntime: resolving hardware (10s timeout)...')
+  let hardware: import('./hardware/resolve').ResolvedHardware
+  try {
+    hardware = await Promise.race([
+      resolveHardware(settings),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Hardware detection timed out after 10s')), 10_000),
+      ),
+    ])
+    diag('createRuntime: hardware resolved OK')
+  } catch (err) {
+    diag(`createRuntime: hardware detection failed/timed out: ${err instanceof Error ? err.message : String(err)}, using all-simulated`)
+    // Fall back to fully simulated hardware
+    const fakeNfc = new (await import('../core/adapters/fake/fake-nfc-adapter')).FakeNfcAdapter({ presentUid: NfcUid('demo-chip-0001') })
+    await fakeNfc.connect()
+    const fakePrinter = new (await import('../core/adapters/fake/fake-printer-adapter')).FakePrinterAdapter()
+    await fakePrinter.connect()
+    const fakeBarcode = new (await import('../core/adapters/fake/fake-barcode-scanner')).FakeBarcodeScanner()
+    await fakeBarcode.connect()
+    hardware = {
+      nfc: { adapter: fakeNfc, mode: 'simulated', kind: 'Simulated NFC', detail: 'timeout fallback' },
+      printer: { adapter: fakePrinter, mode: 'simulated', kind: 'Simulated printer', detail: 'timeout fallback' },
+      barcode: { adapter: fakeBarcode, mode: 'simulated', kind: 'Simulated scanner', detail: 'timeout fallback' },
+      fakes: { nfc: fakeNfc, barcode: fakeBarcode },
+    }
+  }
 
   const app = createCardApp({
     patients,
@@ -117,6 +157,7 @@ export async function createRuntime(appDataPath: string): Promise<Runtime> {
     ids,
   })
 
+  diag('createRuntime: done')
   return {
     app,
     sim: new DemoStation(hardware.fakes.nfc, hardware.fakes.barcode),
